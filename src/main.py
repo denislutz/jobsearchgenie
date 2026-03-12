@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from api.router import router
-from domain.errors import InvalidSearchParamsError, SourceUnavailableError
+from domain.errors import AppError
 from services.job_service import JobService
 from sources.indeed import IndeedAdapter
 
@@ -14,8 +14,7 @@ from sources.indeed import IndeedAdapter
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     http_client = httpx.AsyncClient()
-    indeed_adapter = IndeedAdapter(http_client)
-    app.state.job_service = JobService(indeed_adapter)
+    app.state.job_service = JobService(IndeedAdapter(http_client))
     app.state.http_client = http_client
     yield
     await http_client.aclose()
@@ -36,17 +35,6 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.exception_handler(SourceUnavailableError)
-async def source_unavailable_handler(request: Request, exc: SourceUnavailableError) -> JSONResponse:
-    return JSONResponse(
-        status_code=503,
-        content={"error": {"code": "SERVICE_UNAVAILABLE", "message": str(exc), "details": {}}},
-    )
-
-
-@app.exception_handler(InvalidSearchParamsError)
-async def invalid_params_handler(request: Request, exc: InvalidSearchParamsError) -> JSONResponse:
-    return JSONResponse(
-        status_code=400,
-        content={"error": {"code": "BAD_REQUEST", "message": exc.detail, "details": {}}},
-    )
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status, content={"error": exc.message})

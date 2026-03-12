@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 import pytest
 from httpx import AsyncClient
 
-from domain.errors import SourceUnavailableError
+from domain.errors import AppError
 
 
 @pytest.mark.asyncio
@@ -53,11 +53,10 @@ async def test_search_invalid_sort_by(async_client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_search_indeed_unavailable(async_client: AsyncClient, mock_indeed_adapter: AsyncMock) -> None:
-    mock_indeed_adapter.search.side_effect = SourceUnavailableError("indeed", "connection timeout")
+    mock_indeed_adapter.search.side_effect = AppError(503, "Indeed unavailable: connection timeout")
     response = await async_client.get("/jobs/search?keywords=python&location=Berlin")
     assert response.status_code == 503
-    data = response.json()
-    assert data["detail"]["error"]["code"] == "SERVICE_UNAVAILABLE"
+    assert "Indeed unavailable" in response.json()["error"]
 
 
 @pytest.mark.asyncio

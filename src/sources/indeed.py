@@ -5,7 +5,7 @@ import httpx
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from config import get_settings
-from domain.errors import SourceUnavailableError
+from domain.errors import AppError
 from domain.job import Job
 
 _INDEED_API_URL = "https://api.indeed.com/ads/apisearch"
@@ -79,9 +79,9 @@ class IndeedAdapter:
         try:
             data = await self._fetch_raw(params)
         except RetryError as exc:
-            raise SourceUnavailableError("indeed", str(exc.__cause__)) from exc
+            raise AppError(503, f"Indeed unavailable: {exc.__cause__}") from exc
         except (httpx.TimeoutException, httpx.ConnectError, httpx.HTTPStatusError) as exc:
-            raise SourceUnavailableError("indeed", str(exc)) from exc
+            raise AppError(503, f"Indeed unavailable: {exc}") from exc
 
         results: list[dict] = data.get("results", [])
         return [_normalize(r) for r in results]

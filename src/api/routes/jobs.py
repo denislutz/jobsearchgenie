@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from domain.errors import InvalidSearchParamsError, SourceUnavailableError
+from domain.errors import AppError
 from domain.job import SearchRequest, SearchResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -20,9 +20,7 @@ async def search_jobs(
     sort_by: str = Query("relevance"),
 ) -> SearchResponse:
     if sort_by not in ("relevance", "date"):
-        raise HTTPException(status_code=400, detail={
-            "error": {"code": "BAD_REQUEST", "message": "sort_by must be 'relevance' or 'date'", "details": {}}
-        })
+        raise AppError(400, "sort_by must be 'relevance' or 'date'")
 
     search_req = SearchRequest(
         keywords=keywords,
@@ -35,19 +33,7 @@ async def search_jobs(
         offset=offset,
         sort_by=sort_by,
     )
-
-    try:
-        return await request.app.state.job_service.search(search_req)
-    except SourceUnavailableError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail={"error": {"code": "SERVICE_UNAVAILABLE", "message": str(exc), "details": {}}},
-        ) from exc
-    except InvalidSearchParamsError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail={"error": {"code": "BAD_REQUEST", "message": exc.detail, "details": {}}},
-        ) from exc
+    return await request.app.state.job_service.search(search_req)
 
 
 @router.get("/filters")

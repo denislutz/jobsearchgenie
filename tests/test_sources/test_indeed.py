@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from domain.errors import SourceUnavailableError
+from domain.errors import AppError
 from domain.job import Job
 from sources.indeed import IndeedAdapter, _normalize
 
@@ -60,11 +60,6 @@ def mock_indeed_response() -> dict:
     }
 
 
-@pytest.fixture
-def http_client() -> httpx.AsyncClient:
-    return httpx.AsyncClient()
-
-
 @pytest.mark.asyncio
 async def test_search_returns_jobs(mock_indeed_response: dict) -> None:
     mock_response = MagicMock()
@@ -110,7 +105,7 @@ async def test_retry_on_timeout() -> None:
 
 
 @pytest.mark.asyncio
-async def test_raises_source_unavailable_after_retries() -> None:
+async def test_raises_app_error_after_retries() -> None:
     client = httpx.AsyncClient()
     adapter = IndeedAdapter(client)
 
@@ -118,15 +113,16 @@ async def test_raises_source_unavailable_after_retries() -> None:
         mock_settings.return_value.indeed_publisher_id = "test_publisher"
         with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.side_effect = httpx.TimeoutException("timeout")
-            with pytest.raises(SourceUnavailableError) as exc_info:
+            with pytest.raises(AppError) as exc_info:
                 await adapter.search("python", "Berlin")
 
-    assert exc_info.value.source == "indeed"
+    assert exc_info.value.status == 503
+    assert "Indeed unavailable" in exc_info.value.message
 
 
 @pytest.mark.asyncio
-async def test_http_500_raises_source_unavailable() -> None:
-    """HTTPStatusError is not retried — it propagates immediately as SourceUnavailableError."""
+async def test_http_500_raises_app_error() -> None:
+    """HTTPStatusError is not retried — it propagates immediately as AppError(503)."""
     client = httpx.AsyncClient()
     adapter = IndeedAdapter(client)
 
@@ -138,8 +134,8 @@ async def test_http_500_raises_source_unavailable() -> None:
         mock_settings.return_value.indeed_publisher_id = "test_publisher"
         with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = bad_response
-            with pytest.raises(SourceUnavailableError) as exc_info:
+            with pytest.raises(AppError) as exc_info:
                 await adapter.search("python", "Berlin")
 
-    assert exc_info.value.source == "indeed"
+    assert exc_info.value.status == 503
     assert mock_get.call_count == 1  # no retries for 500
