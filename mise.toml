@@ -1,0 +1,51 @@
+[tools]
+python = "3.12"
+uv = "latest"
+
+[env]
+APP_ENV = "development"
+PYTHONPATH = "src"
+
+[tasks.install]
+description = "Install all dependencies"
+run = "uv sync"
+
+[tasks.dev]
+description = "Run development server with hot reload"
+run = "uv run fastapi dev src/main.py"
+
+[tasks.start]
+description = "Run production server"
+run = "uv run fastapi run src/main.py"
+
+[tasks.test]
+description = "Run tests"
+run = "uv run pytest"
+
+[tasks.test-cov]
+description = "Run tests with coverage"
+run = "uv run pytest --cov=src --cov-report=term-missing"
+
+[tasks.lint]
+description = "Run ruff linter"
+run = "uv run ruff check src"
+
+[tasks.fmt]
+description = "Format code"
+run = "uv run ruff format src"
+
+[tasks.typecheck]
+description = "Run mypy type checker"
+run = "uv run mypy src"
+
+[tasks.check]
+description = "Run lint + typecheck"
+run = ["mise run lint", "mise run typecheck"]
+
+[tasks.migrate]
+description = "Run Alembic migrations"
+run = "uv run alembic upgrade head"
+
+[tasks.migration]
+description = "Create a new migration (usage: mise run migration -- 'description')"
+run = "uv run alembic revision --autogenerate -m"
