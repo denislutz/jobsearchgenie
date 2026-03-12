@@ -129,6 +129,18 @@ mise         →  which Python, which uv, task aliases
 └─────────────────────────────────────────────────────┘
 ```
 
+## VSCode Setup
+
+After running `mise run install`, point VSCode to the project's `.venv` — **not** the mise Python binary — so Pylance can resolve installed packages.
+
+**Cmd+Shift+P** → `Python: Select Interpreter` → pick:
+
+```text
+./.venv/bin/python  (jobsearchgenie)
+```
+
+The mise Python (`~/.local/share/mise/installs/python/3.12.12/bin/python`) has no packages installed. All dependencies live in `.venv`.
+
 ## API Overview
 
 ```text
