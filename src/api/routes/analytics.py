@@ -1,13 +1,15 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 @router.get("/trending")
-async def get_trending() -> dict:
+async def get_trending() -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
 @router.get("/salary-ranges")
-async def get_salary_ranges() -> dict:
+async def get_salary_ranges() -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")

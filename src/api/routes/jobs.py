@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from domain.errors import AppError
@@ -37,10 +39,10 @@ async def search_jobs(
 
 
 @router.get("/filters")
-async def get_filters() -> dict:
+async def get_filters() -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
 @router.get("/{job_id}")
-async def get_job(job_id: str) -> dict:
+async def get_job(job_id: str) -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")

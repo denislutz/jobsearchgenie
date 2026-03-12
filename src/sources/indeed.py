@@ -1,5 +1,6 @@
 from datetime import datetime
 from email.utils import parsedate_to_datetime
+from typing import Any
 
 import httpx
 from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
@@ -20,7 +21,7 @@ def _parse_date(date_str: str | None) -> datetime | None:
         return None
 
 
-def _normalize(raw: dict) -> Job:
+def _normalize(raw: dict[str, Any]) -> Job:
     return Job(
         id=f"indeed-{raw.get('jobkey', '')}",
         title=raw.get("jobtitle", ""),
@@ -43,7 +44,7 @@ class IndeedAdapter:
         stop=stop_after_attempt(3),
         reraise=False,
     )
-    async def _fetch_raw(self, params: dict) -> dict:
+    async def _fetch_raw(self, params: dict[str, str | int]) -> dict[str, Any]:
         response = await self._client.get(_INDEED_API_URL, params=params, timeout=10.0)
         if response.status_code >= 500:
             raise httpx.HTTPStatusError(
@@ -83,5 +84,5 @@ class IndeedAdapter:
         except (httpx.TimeoutException, httpx.ConnectError, httpx.HTTPStatusError) as exc:
             raise AppError(503, f"Indeed unavailable: {exc}") from exc
 
-        results: list[dict] = data.get("results", [])
+        results: list[dict[str, Any]] = data.get("results", [])
         return [_normalize(r) for r in results]

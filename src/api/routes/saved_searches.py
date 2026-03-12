@@ -1,18 +1,20 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/saved-searches", tags=["saved-searches"])
 
 
 @router.post("")
-async def create_saved_search() -> dict:
+async def create_saved_search() -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
 @router.get("")
-async def list_saved_searches() -> dict:
+async def list_saved_searches() -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
 @router.delete("/{search_id}")
-async def delete_saved_search(search_id: str) -> dict:
+async def delete_saved_search(search_id: str) -> dict[str, Any]:
     raise HTTPException(status_code=501, detail="Not implemented yet")

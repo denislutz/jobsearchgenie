@@ -16,15 +16,9 @@ class JobService:
         )
 
         if request.salary_min is not None:
-            jobs = [
-                j for j in jobs
-                if j.salary is not None and j.salary.min is not None and j.salary.min >= request.salary_min
-            ]
+            jobs = [j for j in jobs if j.salary is not None and j.salary.min is not None and j.salary.min >= request.salary_min]
         if request.salary_max is not None:
-            jobs = [
-                j for j in jobs
-                if j.salary is not None and j.salary.max is not None and j.salary.max <= request.salary_max
-            ]
+            jobs = [j for j in jobs if j.salary is not None and j.salary.max is not None and j.salary.max <= request.salary_max]
 
         return SearchResponse(
             total=len(jobs),
